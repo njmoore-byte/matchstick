@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Matchstick — The Algorithm Has a Long Memory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Archivo+Narrow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2EBDC;
+    --paper-edge: #E8DFCD;
+    --ink: #1A1716;
+    --ink-soft: #4A4540;
+    --ink-muted: #847C70;
+    --rule: #C9BFA9;
+    --accent: #B5392E;
+    --accent-deep: #8E2A20;
+    --sulfur: #DDB54A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #DDD3BE;
+    font-family: 'EB Garamond', Georgia, serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  body {
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 18mm 18mm 16mm;
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse at top left, rgba(255,255,255,0.4), transparent 60%),
+      radial-gradient(ellipse at bottom right, rgba(0,0,0,0.02), transparent 50%);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.18);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Masthead */
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .masthead-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .match-mark {
+    width: 14px;
+    height: 38px;
+  }
+
+  .masthead h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 34px;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    font-variation-settings: 'opsz' 144, 'SOFT' 0;
+  }
+
+  .masthead-meta {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  .masthead-meta strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .strapline {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--rule);
+    margin-bottom: 16px;
+  }
+
+  /* Eyebrow + Headline */
+  .eyebrow {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  h2.headline {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 62px;
+    line-height: 0.92;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+    margin-bottom: 14px;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  }
+
+  .headline em {
+    font-style: italic;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .deck {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+    max-width: 92%;
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 0.5px solid var(--rule);
+  }
+
+  .byline {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 22px;
+  }
+
+  .byline span {
+    color: var(--ink);
+  }
+
+  /* Body */
+  .columns {
+    column-count: 2;
+    column-gap: 24px;
+    column-rule: 0.5px solid var(--rule);
+  }
+
+  .body-text p {
+    font-size: 11.5pt;
+    line-height: 1.5;
+    text-align: justify;
+    hyphens: auto;
+    margin-bottom: 9px;
+    color: var(--ink);
+  }
+
+  .body-text p + p {
+    text-indent: 1.4em;
+  }
+
+  /* Drop cap */
+  .drop-cap::first-letter {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    float: left;
+    font-size: 64px;
+    line-height: 0.85;
+    padding: 4px 8px 0 0;
+    color: var(--accent);
+    font-variation-settings: 'opsz' 144;
+  }
+
+  /* Section header */
+  .section-head {
+    break-inside: avoid;
+    margin: 16px 0 8px;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--ink);
+  }
+
+  .section-head .label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .section-head h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.05;
+    color: var(--ink);
+    font-variation-settings: 'opsz' 60;
+    letter-spacing: -0.005em;
+  }
+
+  /* Pull quote */
+  .pullquote {
+    break-inside: avoid;
+    margin: 18px 0;
+    padding: 18px 0 16px;
+    border-top: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--ink);
+    position: relative;
+  }
+
+  .pullquote::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 48px;
+    height: 4px;
+    background: var(--accent);
+  }
+
+  .pullquote p {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 26px;
+    line-height: 1.15;
+    color: var(--ink);
+    text-align: left;
+    letter-spacing: -0.005em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+
+  .pullquote p::before { content: '"'; color: var(--accent); margin-right: 2px; }
+  .pullquote p::after { content: '"'; color: var(--accent); }
+
+  /* Inline emphasis */
+  .body-text strong {
+    font-weight: 500;
+    color: var(--ink);
+    font-style: italic;
+  }
+
+  .body-text em.highlight {
+    font-style: normal;
+    background: linear-gradient(transparent 60%, rgba(221, 181, 74, 0.45) 60%);
+    padding: 0 2px;
+  }
+
+  /* Image placeholder */
+  .image-block {
+    break-inside: avoid;
+    background: var(--paper-edge);
+    border: 0.5px solid var(--rule);
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin: 0 0 10px;
+    color: var(--ink-muted);
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .image-block svg { opacity: 0.4; margin-bottom: 8px; }
+
+  .image-caption {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin: -4px 0 14px;
+    line-height: 1.4;
+  }
+
+  /* Bottom line */
+  .bottom-line {
+    margin-top: 14px;
+    padding: 14px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    break-inside: avoid;
+    position: relative;
+  }
+
+  .bottom-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 56px;
+    height: 4px;
+    background: var(--accent);
+  }
+
+  .bottom-line .label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--sulfur);
+    margin-bottom: 6px;
+  }
+
+  .bottom-line p {
+    font-family: 'EB Garamond', serif;
+    font-size: 12pt;
+    line-height: 1.45;
+    color: var(--paper);
+  }
+
+  /* Footer */
+  .footer {
+    position: absolute;
+    bottom: 10mm;
+    left: 18mm;
+    right: 18mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 0.5px solid var(--rule);
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .footer .page-no {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 14px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* Page 2 specifics */
+  .page-2 .continued-from {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+
+  .page-2 .deck-2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.1;
+    color: var(--ink);
+    max-width: 88%;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid var(--ink);
+    font-variation-settings: 'opsz' 144;
+  }
+
+  .signoff {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .signoff .credit {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    line-height: 1.6;
+  }
+
+  .signoff .credit strong { color: var(--ink); font-weight: 600; }
+
+  .signoff-mark svg { display: block; }
+
+  /* Print */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    html, body { background: white; padding: 0; }
+    body { gap: 0; }
+    .page {
+      box-shadow: none;
+      page-break-after: always;
+      margin: 0;
+    }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== PAGE 1 — FRONT ============== -->
+<article class="page page-1">
+
+  <!-- Masthead -->
+  <header class="masthead">
+    <div class="masthead-title">
+      <!-- Matchstick mark -->
+      <svg class="match-mark" viewBox="0 0 14 38" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="7" cy="6" rx="5.5" ry="5.5" fill="#B5392E"/>
+        <ellipse cx="6" cy="4.5" rx="2" ry="1.8" fill="#E07A6E" opacity="0.7"/>
+        <rect x="5.5" y="10" width="3" height="27" fill="#D4B07A"/>
+        <rect x="5.5" y="10" width="3" height="27" fill="url(#grain)" opacity="0.3"/>
+        <defs>
+          <linearGradient id="grain" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#8B6B3D"/>
+            <stop offset="50%" stop-color="transparent"/>
+            <stop offset="100%" stop-color="#8B6B3D"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <h1>Matrix Matchstick</h1>
+    </div>
+    <div class="masthead-meta">
+      <strong>Issue No. 24</strong><br>
+      14 May 2026 · Insights &amp; Education
+    </div>
+  </header>
+
+  <div class="strapline">Short, sharp commercial intelligence from Matrix</div>
+
+  <div class="eyebrow">The Algorithmic Consumer · Volume One</div>
+
+  <h2 class="headline">The algorithm<br>has a <em>long memory</em>.</h2>
+
+  <p class="deck">
+    Why "newness" is no longer the peak of the curve — and what that
+    means for every business unit at Matrix.
+  </p>
+
+  <div class="byline">
+    Words by <span>Nathan</span> · Insights &amp; Education
+  </div>
+
+  <!-- Two-column body -->
+  <div class="columns body-text">
+
+    <p class="drop-cap">In 2022, Kate Bush's <em>Running Up That Hill</em> hit number one in the UK. The song had been released 37 years earlier. Streams jumped 8,700% in weeks. Bush became the oldest female artist ever to top the UK Singles Chart — at 63, with a track most of her new listeners hadn't been born to hear the first time.</p>
+
+    <p>There was no marketing campaign. No re-release. No new album. Just a Netflix scene, a TikTok clip, and an algorithm that doesn't care when a song was made.</p>
+
+    <p>This is the most important shift in consumer behaviour you're probably not planning around.</p>
+
+    <div class="section-head">
+      <div class="label">Part One</div>
+      <h3>The end of "new"</h3>
+    </div>
+
+    <p>For most of broadcast and retail history, mass culture has run on a chronological clock. Songs charted on release. Magazines sold the month they printed. Beauty brands launched, peaked, and decayed in a tidy 6-to-12-month curve. <em class="highlight">Recency was relevance.</em></p>
+
+    <p>For You changed that. TikTok's algorithm has no temporal bias — only an engagement bias. A 1985 track and a song released last Tuesday compete on identical terms. Whichever resonates wins; release date is a footnote.</p>
+
+    <div class="pullquote">
+      <p>The launch lights the fuse. The algorithm decides when it explodes.</p>
+    </div>
+
+    <p>The implications cascade. Fleetwood Mac's <em>Dreams</em> (1977) re-entered the Billboard chart 43 years after release. Brenda Lee hit number one on the Hot 100 at 79, with a song from 1958 — breaking the record for the longest gap between release and chart-topper. Glass Animals' <em>Heat Waves</em> took 59 weeks to climb to number one, the slowest ascent in Billboard history. Warner Music has built a team whose explicit job is mining its back catalogue for tracks the algorithm might wake up.</p>
+
+    <p>This isn't nostalgia. The money in music catalogues — Queen's sold to Sony for $1.27bn, Springsteen's for $500m, Dylan's for around $500m — only makes sense if you believe a 50-year-old recording will keep finding new audiences indefinitely. Investors aren't betting on memory. They're betting on the algorithm.</p>
+
+  </div>
+
+  <footer class="footer">
+    <span>Matrix · Internal Circulation</span>
+    <span class="page-no">i.</span>
+    <span>Vol. 24 · May 2026</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 2 — BACK ============== -->
+<article class="page page-2">
+
+  <!-- Mini masthead -->
+  <header class="masthead">
+    <div class="masthead-title">
+      <svg class="match-mark" viewBox="0 0 14 38" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="7" cy="6" rx="5.5" ry="5.5" fill="#B5392E"/>
+        <rect x="5.5" y="10" width="3" height="27" fill="#D4B07A"/>
+      </svg>
+      <h1 style="font-size: 22px;">Matrix Matchstick</h1>
+    </div>
+    <div class="masthead-meta">
+      <strong>continued</strong><br>
+      Page ii of ii
+    </div>
+  </header>
+
+  <div class="continued-from">From the front</div>
+
+  <p class="deck-2">
+    Beauty is doing the same thing — quietly.
+  </p>
+
+  <div class="columns body-text">
+
+    <p>The archive-mining playbook is now an industry-wide strategy. Lancôme has rebooted Juicy Tubes twice (2020, 2024) and built its 25th-anniversary campaign around Paris Hilton, Hilary Duff, Ed Westwick and Kelly Rowland reminiscing about the 2000s.</p>
+
+    <p>Clinique's Almost Lipstick in Black Honey — launched in <em>1971</em> — has amassed over 240 million TikTok views, with one tube selling every three minutes after Liv Tyler's <em>Lord of the Rings</em> footage went viral two decades after the film. MAC has turned 90s archive drops into a seasonal calendar event. The Ordinary just relaunched a discontinued foundation because the algorithm wouldn't stop asking for it.</p>
+
+    <p>Sol de Janeiro is the cleanest analogue. Brazilian Bum Bum Cream launched in 2015 and was a quiet niche product for six years before TikTok turned it into a billion-dollar brand. <em class="highlight">The formula didn't change. The algorithm did.</em></p>
+
+    <div class="pullquote">
+      <p>The new makes noise. The catalogue makes echoes.</p>
+    </div>
+
+    <div class="section-head">
+      <div class="label">What this means · 01</div>
+      <h3>Cowshed</h3>
+    </div>
+
+    <p>Today's refresh isn't a reset — it's an ignition point. The brand carries 25+ years of heritage: Babington, the original spa, the Soho House DNA. In the algorithmic age, a refresh activates the back catalogue. Every "have you tried Cowshed?" video that follows today is a free distribution channel for two and a half decades of meaning. The storytelling should be deliberately layered — new at the front, heritage running through it.</p>
+
+    <div class="section-head">
+      <div class="label">What this means · 02</div>
+      <h3>Private Brands</h3>
+    </div>
+
+    <p>Past is a strategic place to mine. Build a dormant SKU register. Audit what we've discontinued in the last five years and ask which products had emotional signatures worth reviving — reformulated for today's regulations, but emotionally faithful. <em>What's already had a moment?</em> is now a legitimate NPD brief, not a backwards-facing one.</p>
+
+    <div class="section-head">
+      <div class="label">What this means · 03</div>
+      <h3>Travel</h3>
+    </div>
+
+    <p>The premium travel consumer skews older and less online — but they're not insulated. In a category where every challenger brand looks freshly minted, heritage becomes the cut-through signal. TAP × Benamôr (1925). ANA × L'Occitane × Globe-Trotter (120 years). Finnair × Marimekko (1960s prints). Qantas built its Centenary Collection around six kits inspired by the airline's own iconic design eras. Singapore × Penhaligon's. Cathay × Bamford.</p>
+
+    <p>The pattern is unmistakable: premium buyers are choosing partners whose value lies precisely in their <em>endurance</em>. Don't pitch the newest, slickest formulator. Pitch the partner whose archive, design language and longevity signal something a challenger can't fake — and consider retro-led design as a category strategy, not a nostalgia gimmick.</p>
+
+    <div class="pullquote">
+      <p>Heritage isn't a tax on a brand. It's an asset on the balance sheet.</p>
+    </div>
+
+  </div>
+
+  <!-- Bottom line -->
+  <div class="bottom-line">
+    <div class="label">The Bottom Line</div>
+    <p>The decay curve is dead. So is the assumption that a product's commercial peak is the moment it launches. Brands that treat their back catalogue as a portfolio of dormant options — rather than a graveyard of expired SKUs — will win the next decade. Kate Bush sold 8,700% more of a song she wrote in 1985 without lifting a finger. The question for every brand at Matrix is what's sitting in our archive waiting to do the same.</p>
+  </div>
+
+  <!-- Sign-off -->
+  <div class="signoff">
+    <div class="credit">
+      <strong>Matrix Matchstick</strong> is an internal publication<br>
+      from Insights &amp; Education · Reply with thoughts.
+    </div>
+    <div class="signoff-mark">
+      <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="16" cy="16" r="15" fill="none" stroke="#1A1716" stroke-width="0.5"/>
+        <text x="16" y="20" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-size="13" fill="#B5392E">M</text>
+      </svg>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span>Matrix · Internal Circulation</span>
+    <span class="page-no">ii.</span>
+    <span>Vol. 24 · May 2026</span>
+  </footer>
+
+</article>
+
+</body>
+</html>

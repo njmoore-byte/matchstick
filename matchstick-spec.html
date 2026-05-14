@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Matrix Matchstick — Design Specification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Archivo+Narrow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2EBDC;
+    --paper-edge: #E8DFCD;
+    --ink: #1A1716;
+    --ink-soft: #4A4540;
+    --ink-muted: #847C70;
+    --rule: #C9BFA9;
+    --rule-soft: #DDD3BE;
+    --accent: #B5392E;
+    --sulfur: #DDB54A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: #DDD3BE;
+    font-family: 'EB Garamond', Georgia, serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  body {
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 16mm 18mm 14mm;
+    background: var(--paper);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.18);
+    position: relative;
+  }
+
+  /* Header bar (consistent across pages) */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--ink);
+    margin-bottom: 18px;
+  }
+
+  .doc-header .left {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    font-weight: 500;
+    font-style: italic;
+  }
+
+  .doc-header .right {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* Page title block */
+  .page-title {
+    margin-bottom: 20px;
+  }
+
+  .page-title .num {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .page-title h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -0.012em;
+    font-variation-settings: 'opsz' 144;
+    margin-bottom: 6px;
+  }
+
+  .page-title .intro {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+    max-width: 88%;
+  }
+
+  /* Section header */
+  .sec {
+    margin: 18px 0 10px;
+  }
+
+  .sec .label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .sec h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 20px;
+    border-top: 1px solid var(--ink);
+    padding-top: 8px;
+    line-height: 1.1;
+  }
+
+  /* Cover specifics */
+  .cover-mark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+
+  .cover-mark svg { width: 20px; height: 54px; }
+
+  .cover-mark .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 26px;
+  }
+
+  .cover-mark .name small {
+    display: block;
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  .cover-title {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 86px;
+    line-height: 0.9;
+    letter-spacing: -0.022em;
+    margin-bottom: 18px;
+    font-variation-settings: 'opsz' 144;
+  }
+
+  .cover-title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .cover-subtitle {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.3;
+    color: var(--ink-soft);
+    max-width: 78%;
+    padding-bottom: 24px;
+    border-bottom: 0.5px solid var(--rule);
+    margin-bottom: 28px;
+  }
+
+  .cover-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 36px;
+    margin-bottom: 32px;
+  }
+
+  .cover-meta dt {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+
+  .cover-meta dd {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--ink);
+  }
+
+  .cover-meta dd code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--paper-edge);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  .cover-note {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 18px 22px;
+    margin-top: 18px;
+    position: relative;
+  }
+
+  .cover-note::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 56px; height: 4px;
+    background: var(--accent);
+  }
+
+  .cover-note .label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--sulfur);
+    margin-bottom: 6px;
+  }
+
+  .cover-note p {
+    font-family: 'EB Garamond', serif;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--paper);
+  }
+
+  /* Colour swatches */
+  .swatch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .swatch {
+    border: 0.5px solid var(--rule);
+    background: white;
+  }
+
+  .swatch .chip {
+    height: 78px;
+    border-bottom: 0.5px solid var(--rule);
+  }
+
+  .swatch .meta {
+    padding: 9px 11px 11px;
+  }
+
+  .swatch .meta .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 2px;
+  }
+
+  .swatch .meta .hex {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .swatch .meta .use {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    color: var(--ink-muted);
+    line-height: 1.35;
+    letter-spacing: 0.02em;
+  }
+
+  /* Typography specimen */
+  .type-row {
+    display: grid;
+    grid-template-columns: 60mm 1fr;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--rule);
+    align-items: center;
+  }
+
+  .type-row:last-child { border-bottom: none; }
+
+  .type-row .specimen {
+    color: var(--ink);
+  }
+
+  .type-row .specs {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+
+  .type-row .specs strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .type-row .specs .role {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+
+  /* Specimen styles — mirroring the template */
+  .spec-h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    font-variation-settings: 'opsz' 144;
+  }
+  .spec-h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 42px;
+    line-height: 0.92;
+    letter-spacing: -0.018em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 30;
+  }
+  .spec-deck {
+    font-family: 'EB Garamond', serif;
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.35;
+    color: var(--ink-soft);
+  }
+  .spec-deck2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-style: italic;
+    font-size: 28px;
+    line-height: 1.1;
+    font-variation-settings: 'opsz' 144;
+  }
+  .spec-h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 22px;
+    line-height: 1.05;
+    letter-spacing: -0.005em;
+    font-variation-settings: 'opsz' 60;
+  }
+  .spec-pull {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 22px;
+    line-height: 1.15;
+    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+  }
+  .spec-pull::before { content: '"'; color: var(--accent); margin-right: 2px; }
+  .spec-pull::after { content: '"'; color: var(--accent); }
+  .spec-body {
+    font-family: 'EB Garamond', serif;
+    font-size: 11.5pt;
+    line-height: 1.5;
+  }
+  .spec-eyebrow {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  .spec-byline {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .spec-caption {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  /* Page setup diagram */
+  .page-diagram {
+    border: 0.5px solid var(--rule);
+    background: white;
+    width: 80mm;
+    aspect-ratio: 210 / 297;
+    margin: 0 auto 20px;
+    position: relative;
+    padding: 6.85mm 6.85mm 5.3mm;
+  }
+
+  .page-diagram .live-area {
+    border: 0.5px dashed var(--accent);
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .page-diagram .col-divider {
+    position: absolute;
+    top: 14%;
+    bottom: 14%;
+    left: 50%;
+    width: 0.5px;
+    background: var(--rule);
+  }
+
+  .page-diagram .top-rule {
+    position: absolute;
+    top: 8%;
+    left: 0;
+    right: 0;
+    height: 0.5px;
+    background: var(--ink);
+  }
+
+  .page-diagram .bottom-rule {
+    position: absolute;
+    bottom: 5%;
+    left: 0;
+    right: 0;
+    height: 0.5px;
+    background: var(--rule);
+  }
+
+  .dim-label {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent);
+    background: var(--paper);
+    padding: 0 4px;
+  }
+
+  /* Component spec layout */
+  .comp-block {
+    margin-bottom: 16px;
+    border: 0.5px solid var(--rule);
+    background: white;
+  }
+
+  .comp-block .demo {
+    padding: 14px 16px;
+    background: var(--paper);
+    border-bottom: 0.5px solid var(--rule);
+  }
+
+  .comp-block .specs-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  .comp-block .specs-row > div {
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .comp-block .specs-row > div:first-child {
+    border-right: 0.5px solid var(--rule);
+  }
+
+  .comp-block .role-tag {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .comp-block strong { color: var(--ink); font-weight: 500; }
+
+  /* Demo: Pull quote replica */
+  .demo-pull {
+    padding: 14px 16px;
+    border-top: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--ink);
+    position: relative;
+    background: var(--paper);
+  }
+
+  .demo-pull::before {
+    content: '';
+    position: absolute;
+    top: -3px; left: 0;
+    width: 48px; height: 4px;
+    background: var(--accent);
+  }
+
+  /* Demo: Bottom line */
+  .demo-bottom-line {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 12px 16px;
+    position: relative;
+  }
+
+  .demo-bottom-line::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 56px; height: 4px;
+    background: var(--accent);
+  }
+
+  .demo-bottom-line .label {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--sulfur);
+    margin-bottom: 4px;
+  }
+
+  .demo-bottom-line p {
+    font-family: 'EB Garamond', serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    color: var(--paper);
+  }
+
+  /* Demo: section head */
+  .demo-section-head {
+    padding: 12px 0 4px;
+    border-top: 1.5px solid var(--ink);
+    background: var(--paper);
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 12px;
+  }
+
+  /* Demo: masthead */
+  .demo-masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 14px 16px;
+    border-bottom: 1.5px solid var(--ink);
+    background: var(--paper);
+  }
+
+  .demo-masthead .left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .demo-masthead h4 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    font-variation-settings: 'opsz' 144;
+  }
+
+  .demo-masthead .meta {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.5;
+  }
+
+  /* Demo: drop cap */
+  .demo-drop {
+    background: var(--paper);
+    padding: 14px 16px;
+    font-family: 'EB Garamond', serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    text-align: justify;
+  }
+
+  .demo-drop::first-letter {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    float: left;
+    font-size: 50px;
+    line-height: 0.85;
+    padding: 4px 8px 0 0;
+    color: var(--accent);
+    font-variation-settings: 'opsz' 144;
+  }
+
+  /* Spacing rhythm visual */
+  .rhythm-list {
+    display: grid;
+    grid-template-columns: 70px 1fr 80px;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+
+  .rhythm-bar {
+    background: var(--accent);
+    height: 6px;
+    opacity: 0.8;
+  }
+
+  .rhythm-list .role {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: right;
+  }
+
+  /* Rule cards */
+  .rule-card {
+    background: white;
+    border: 0.5px solid var(--rule);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .rule-card .head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .rule-card .head .name {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .rule-card .head .tag {
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .rule-card p {
+    font-family: 'EB Garamond', serif;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+
+  /* Footer */
+  .page-foot {
+    position: absolute;
+    bottom: 9mm;
+    left: 18mm;
+    right: 18mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+    border-top: 0.5px solid var(--rule);
+    font-family: 'Archivo Narrow', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+
+  .page-foot .num {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 13px;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* Two col layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  /* Component grid - 2 wide */
+  .comp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  /* Print */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  @media print {
+    html, body { background: white; padding: 0; }
+    body { gap: 0; }
+    .page {
+      box-shadow: none;
+      page-break-after: always;
+      margin: 0;
+    }
+    .page:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============== PAGE 1 — COVER & FOUNDATION ============== -->
+<article class="page">
+
+  <div class="cover-mark">
+    <svg viewBox="0 0 20 54" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="10" cy="9" rx="8" ry="8" fill="#B5392E"/>
+      <ellipse cx="8.5" cy="6.5" rx="3" ry="2.5" fill="#E07A6E" opacity="0.7"/>
+      <rect x="8" y="15" width="4" height="38" fill="#D4B07A"/>
+    </svg>
+    <div class="name">
+      Matrix Matchstick
+      <small>Design Specification · v1.0</small>
+    </div>
+  </div>
+
+  <h1 class="cover-title">A spec for <em>rebuilding</em><br>the system in Figma.</h1>
+
+  <p class="cover-subtitle">
+    Everything a designer needs to recreate Matrix Matchstick as a
+    proper Figma file — type styles, colour tokens, components,
+    page setup and rules. Pair this document with the reference HTML.
+  </p>
+
+  <dl class="cover-meta">
+    <div>
+      <dt>Document</dt>
+      <dd>Matrix Matchstick design specification, v1.0<br>Prepared by Insights &amp; Education, May 2026</dd>
+    </div>
+    <div>
+      <dt>Reference file</dt>
+      <dd><code>matchstick-template.html</code><br>The live HTML this specification documents</dd>
+    </div>
+    <div>
+      <dt>Required fonts</dt>
+      <dd>
+        <strong>Fraunces</strong> — Google Fonts (variable)<br>
+        <strong>EB Garamond</strong> — Google Fonts<br>
+        <strong>Archivo Narrow</strong> — Google Fonts<br>
+        All three free, install before opening the Figma file
+      </dd>
+    </div>
+    <div>
+      <dt>Output format</dt>
+      <dd>A4, single sheet, two-sided<br>Print and digital PDF distribution<br>Internal use only</dd>
+    </div>
+  </dl>
+
+  <div class="cover-note">
+    <div class="label">How to use this document</div>
+    <p>
+      Work through pages in order. Build Figma styles (colour, text, effects) from pages 2–3 before constructing any components. Pages 4–5 document each module of the layout with annotated specs. Page 6 covers reusable rules and edge cases. The reference HTML is the source of truth for any visual ambiguity — open it side by side.
+    </p>
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">i.</span>
+    <span>Cover &amp; Foundation</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 2 — COLOUR ============== -->
+<article class="page">
+
+  <div class="doc-header">
+    <div class="left">Matrix Matchstick — Design Specification</div>
+    <div class="right">Section 01 · Colour</div>
+  </div>
+
+  <div class="page-title">
+    <div class="num">i.</div>
+    <h2>Colour palette.</h2>
+    <p class="intro">Nine tokens. The palette is deliberately narrow — a warm paper base, a single editorial accent, and a handful of inks for hierarchy. Accent and sulfur should be used sparingly; they earn their impact through restraint.</p>
+  </div>
+
+  <div class="swatch-grid">
+    <div class="swatch">
+      <div class="chip" style="background: #F2EBDC;"></div>
+      <div class="meta">
+        <div class="name">Paper</div>
+        <div class="hex">#F2EBDC · rgb(242,235,220)</div>
+        <div class="use">Primary page background. Every printed surface.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #E8DFCD;"></div>
+      <div class="meta">
+        <div class="name">Paper Edge</div>
+        <div class="hex">#E8DFCD · rgb(232,223,205)</div>
+        <div class="use">Image placeholders, secondary surfaces.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #1A1716;"></div>
+      <div class="meta">
+        <div class="name">Ink</div>
+        <div class="hex">#1A1716 · rgb(26,23,22)</div>
+        <div class="use">Body copy, primary rules, Bottom Line panel fill.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #4A4540;"></div>
+      <div class="meta">
+        <div class="name">Ink Soft</div>
+        <div class="hex">#4A4540 · rgb(74,69,64)</div>
+        <div class="use">Deck/standfirst text. One step below body.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #847C70;"></div>
+      <div class="meta">
+        <div class="name">Ink Muted</div>
+        <div class="hex">#847C70 · rgb(132,124,112)</div>
+        <div class="use">Utility text — bylines, captions, footers.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #C9BFA9;"></div>
+      <div class="meta">
+        <div class="name">Rule</div>
+        <div class="hex">#C9BFA9 · rgb(201,191,169)</div>
+        <div class="use">Hairline dividers, column rules, swatch borders.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #B5392E;"></div>
+      <div class="meta">
+        <div class="name">Accent</div>
+        <div class="hex">#B5392E · rgb(181,57,46)</div>
+        <div class="use">Eyebrow labels, drop cap, pull-quote tab, italics in headlines.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #DDB54A;"></div>
+      <div class="meta">
+        <div class="name">Sulfur</div>
+        <div class="hex">#DDB54A · rgb(221,181,74)</div>
+        <div class="use">Highlighter band; Bottom Line label only.</div>
+      </div>
+    </div>
+    <div class="swatch">
+      <div class="chip" style="background: #DDD3BE;"></div>
+      <div class="meta">
+        <div class="name">Canvas</div>
+        <div class="hex">#DDD3BE · rgb(221,211,190)</div>
+        <div class="use">Outside the page, screen view only. Not printed.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="label">Application Rules</div>
+    <h3>How the palette behaves</h3>
+  </div>
+
+  <div class="two-col">
+    <div class="rule-card">
+      <div class="head"><span class="name">Accent restraint</span><span class="tag">Rule 01</span></div>
+      <p>Accent red should occupy no more than 3–5% of any spread. Apply to: eyebrow labels, drop caps, italic emphasis inside headlines, the 4px tab above pull quotes and Bottom Line panels, italic letterforms inside marks. Never use accent for body copy.</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Sulfur is special</span><span class="tag">Rule 02</span></div>
+      <p>Sulfur appears in exactly two contexts: as a highlighter band behind a short phrase of body copy (use sparingly — one or two phrases per issue), and as the label text colour on the Bottom Line panel. Do not use it anywhere else.</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Ink hierarchy</span><span class="tag">Rule 03</span></div>
+      <p>Three weights of ink — full, soft, muted — map to three semantic levels. Ink for primary information, ink-soft for editorial colour (decks, captions where they matter), ink-muted for utility (bylines, footers, image captions).</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Rules and dividers</span><span class="tag">Rule 04</span></div>
+      <p>Two divider weights exist: 1.5px in full ink (section heads, top of pull quote, masthead) and 0.5px in the rule colour (column dividers, deck underline, footer top). Don't introduce additional weights.</p>
+    </div>
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">ii.</span>
+    <span>Section 01 · Colour</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 3 — TYPOGRAPHY ============== -->
+<article class="page">
+
+  <div class="doc-header">
+    <div class="left">Matrix Matchstick — Design Specification</div>
+    <div class="right">Section 02 · Typography</div>
+  </div>
+
+  <div class="page-title">
+    <div class="num">ii.</div>
+    <h2>Typography.</h2>
+    <p class="intro">Three families do all the work. Fraunces for display, EB Garamond for body and italic deck, Archivo Narrow for utility. All free via Google Fonts. Build each style below as a Figma text style before constructing any layouts.</p>
+  </div>
+
+  <div class="sec">
+    <div class="label">Specimen Sheet</div>
+    <h3>Type styles at scale</h3>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-h1">Matrix Matchstick</div>
+    <div class="specs">
+      <span class="role">Masthead — H1</span>
+      <strong>Fraunces 600</strong> · 34px / 100% · tracking <strong>+0.01em</strong><br>
+      Variable: opsz 144 · For the publication name in the masthead. Sentence case.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-h2">Headline goes here</div>
+    <div class="specs">
+      <span class="role">Cover headline — H2</span>
+      <strong>Fraunces 600</strong> · 62px / 92% · tracking <strong>−0.018em</strong><br>
+      Variable: opsz 144, SOFT 30 · Italic for accent words (use accent colour). Sentence case.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-deck2">Italic deck on page two</div>
+    <div class="specs">
+      <span class="role">Editorial deck</span>
+      <strong>Fraunces 500 italic</strong> · 28px / 110%<br>
+      Variable: opsz 144 · Bridges into page-two body. One short sentence only.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-h3">Section header.</div>
+    <div class="specs">
+      <span class="role">Section head — H3</span>
+      <strong>Fraunces 500</strong> · 22px / 105% · tracking <strong>−0.005em</strong><br>
+      Variable: opsz 60 · Sits below an Archivo Narrow eyebrow label, above a 1.5px ink rule.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-pull">The pull quote sets the tone.</div>
+    <div class="specs">
+      <span class="role">Pull quote</span>
+      <strong>Fraunces 400 italic</strong> · 26px / 115%<br>
+      Variable: opsz 144, SOFT 50 · Auto-wrapped in curly quotes in accent colour.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-deck">A standfirst, set in italic.</div>
+    <div class="specs">
+      <span class="role">Front-page deck</span>
+      <strong>EB Garamond 400 italic</strong> · 19px / 135% · ink-soft<br>
+      Sits below the headline and above the byline. One to two sentences maximum.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-body">Body copy. Set in two columns, justified, with auto-hyphenation. Paragraphs after the first take a 1.4em indent. Italic for emphasis inside body.</div>
+    <div class="specs">
+      <span class="role">Body — long-form</span>
+      <strong>EB Garamond 400</strong> · 11.5pt / 150%<br>
+      Justified · auto-hyphenation on · 1.4em first-line indent on all paragraphs except the first.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-eyebrow">Eyebrow label above section</div>
+    <div class="specs">
+      <span class="role">Eyebrow / label</span>
+      <strong>Archivo Narrow 500</strong> · 10.5px · tracking <strong>+0.22em</strong> · UPPERCASE · accent<br>
+      Sits 4–6px above any H3 section header. Also used for the Bottom Line label (in sulfur).
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-byline">Words by Nathan · Insights &amp; Education</div>
+    <div class="specs">
+      <span class="role">Byline / utility</span>
+      <strong>Archivo Narrow 400</strong> · 10px · tracking <strong>+0.18em</strong> · UPPERCASE · ink-muted<br>
+      Used for byline, footer, image captions, masthead meta block.
+    </div>
+  </div>
+
+  <div class="type-row">
+    <div class="specimen spec-caption">Caption · figure 02</div>
+    <div class="specs">
+      <span class="role">Caption</span>
+      <strong>Archivo Narrow 400</strong> · 9.5px · tracking <strong>+0.06em</strong> · UPPERCASE · ink-muted<br>
+      Below image blocks. Looser tracking than other labels to read at small size.
+    </div>
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">iii.</span>
+    <span>Section 02 · Typography</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 4 — PAGE SETUP & SPACING ============== -->
+<article class="page">
+
+  <div class="doc-header">
+    <div class="left">Matrix Matchstick — Design Specification</div>
+    <div class="right">Section 03 · Page setup &amp; rhythm</div>
+  </div>
+
+  <div class="page-title">
+    <div class="num">iii.</div>
+    <h2>Page setup.</h2>
+    <p class="intro">The Matchstick is a single A4 sheet printed both sides. Each page uses a two-column body grid framed by generous outer margins and a consistent top-and-tail furniture.</p>
+  </div>
+
+  <div class="two-col">
+
+    <div>
+      <div class="sec">
+        <div class="label">Page geometry</div>
+        <h3>The frame</h3>
+      </div>
+
+      <div class="page-diagram">
+        <div class="live-area">
+          <div class="top-rule"></div>
+          <div class="col-divider"></div>
+          <div class="bottom-rule"></div>
+        </div>
+        <div class="dim-label" style="top: -8px; left: 50%; transform: translateX(-50%);">210mm</div>
+        <div class="dim-label" style="left: -28px; top: 50%; transform: translateY(-50%) rotate(-90deg);">297mm</div>
+        <div class="dim-label" style="top: 16px; left: 12px;">18mm</div>
+        <div class="dim-label" style="bottom: 18px; left: 12px;">14mm</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="head"><span class="name">Format</span><span class="tag">A4</span></div>
+        <p><strong>210 × 297mm</strong> · portrait · single sheet, two-sided. No bleed required for internal print runs; add 3mm if professionally printed.</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="head"><span class="name">Margins</span><span class="tag">Page</span></div>
+        <p>Top: <strong>16mm</strong> · Sides: <strong>18mm</strong> · Bottom: <strong>14mm</strong>. The footer sits at 9mm from the bottom edge, outside the body area.</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="head"><span class="name">Body grid</span><span class="tag">Columns</span></div>
+        <p>Two-column body, equal width. Column gap: <strong>24px</strong>. Divider: <strong>0.5px</strong> rule colour, running the full body height between columns.</p>
+      </div>
+
+    </div>
+
+    <div>
+      <div class="sec">
+        <div class="label">Vertical rhythm</div>
+        <h3>Spacing scale</h3>
+      </div>
+
+      <p style="font-size: 12px; line-height: 1.45; color: var(--ink-soft); margin-bottom: 14px;">Spacing follows a coarse scale rather than a fine token system. Use the values below; don't introduce in-between sizes.</p>
+
+      <div class="rhythm-list">
+        <span>2px</span>
+        <div class="rhythm-bar" style="width: 4%;"></div>
+        <span class="role">Inline gaps</span>
+      </div>
+      <div class="rhythm-list">
+        <span>4px</span>
+        <div class="rhythm-bar" style="width: 8%;"></div>
+        <span class="role">Accent tab</span>
+      </div>
+      <div class="rhythm-list">
+        <span>6–8px</span>
+        <div class="rhythm-bar" style="width: 14%;"></div>
+        <span class="role">Label → head</span>
+      </div>
+      <div class="rhythm-list">
+        <span>12px</span>
+        <div class="rhythm-bar" style="width: 22%;"></div>
+        <span class="role">Section pad</span>
+      </div>
+      <div class="rhythm-list">
+        <span>18px</span>
+        <div class="rhythm-bar" style="width: 32%;"></div>
+        <span class="role">Pull quote pad</span>
+      </div>
+      <div class="rhythm-list">
+        <span>22–24px</span>
+        <div class="rhythm-bar" style="width: 42%;"></div>
+        <span class="role">Column gap</span>
+      </div>
+      <div class="rhythm-list">
+        <span>32px</span>
+        <div class="rhythm-bar" style="width: 55%;"></div>
+        <span class="role">Block break</span>
+      </div>
+
+      <div class="sec" style="margin-top: 18px;">
+        <div class="label">Page furniture</div>
+        <h3>Top &amp; tail</h3>
+      </div>
+
+      <div class="rule-card">
+        <div class="head"><span class="name">Masthead</span><span class="tag">Top</span></div>
+        <p>Logo mark + publication name (left), issue meta block (right). Underlined with 1.5px ink rule. Page 2 uses a reduced version at ~65% scale.</p>
+      </div>
+
+      <div class="rule-card">
+        <div class="head"><span class="name">Footer</span><span class="tag">Bottom</span></div>
+        <p>Three-column flex: circulation note (left), italic page number (centre), issue reference (right). 0.5px top rule. All in Archivo Narrow, except the italic page number in Fraunces.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">iv.</span>
+    <span>Section 03 · Page setup &amp; rhythm</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 5 — COMPONENTS ============== -->
+<article class="page">
+
+  <div class="doc-header">
+    <div class="left">Matrix Matchstick — Design Specification</div>
+    <div class="right">Section 04 · Components</div>
+  </div>
+
+  <div class="page-title">
+    <div class="num">iv.</div>
+    <h2>Components.</h2>
+    <p class="intro">Build each of these as a Figma component with named layers. They recur across every issue — properly componentised, future issues are a content swap.</p>
+  </div>
+
+  <!-- Masthead -->
+  <div class="comp-block">
+    <div class="demo-masthead">
+      <div class="left">
+        <svg width="12" height="32" viewBox="0 0 14 38" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="7" cy="6" rx="5.5" ry="5.5" fill="#B5392E"/>
+          <rect x="5.5" y="10" width="3" height="27" fill="#D4B07A"/>
+        </svg>
+        <h4>Matrix Matchstick</h4>
+      </div>
+      <div class="meta"><strong style="color: var(--ink);">Issue No. 24</strong><br>14 May 2026 · Insights</div>
+    </div>
+    <div class="specs-row">
+      <div>
+        <span class="role-tag">Masthead</span>
+        <strong>Layout:</strong> Flex space-between, items align-flex-end<br>
+        <strong>Padding:</strong> 0 (sits at body edge)<br>
+        <strong>Bottom rule:</strong> 1.5px solid Ink
+      </div>
+      <div>
+        <span class="role-tag">Page 2 variant</span>
+        <strong>Scale:</strong> ~65% of full masthead<br>
+        <strong>H1 size:</strong> 22px (vs 34px on page 1)<br>
+        <strong>Meta:</strong> "continued" instead of issue No.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section head -->
+  <div class="comp-block">
+    <div class="demo-section-head">
+      <div class="spec-eyebrow">What this means · 01</div>
+      <h4 class="spec-h3" style="margin-top: 4px;">Cowshed</h4>
+    </div>
+    <div class="specs-row">
+      <div>
+        <span class="role-tag">Section head</span>
+        <strong>Top rule:</strong> 1.5px solid Ink<br>
+        <strong>Padding-top:</strong> 12px (between rule and label)<br>
+        <strong>Label → H3:</strong> 4px gap
+      </div>
+      <div>
+        <span class="role-tag">Behaviour</span>
+        <strong>Break-inside:</strong> avoid (never splits across columns)<br>
+        <strong>Vertical margin:</strong> 16px above, 8px below<br>
+        <strong>Label colour:</strong> Accent
+      </div>
+    </div>
+  </div>
+
+  <!-- Pull quote -->
+  <div class="comp-block">
+    <div class="demo-pull">
+      <p class="spec-pull">Heritage isn't a tax on a brand. It's an asset on the balance sheet.</p>
+    </div>
+    <div class="specs-row">
+      <div>
+        <span class="role-tag">Pull quote</span>
+        <strong>Top &amp; bottom rules:</strong> 1.5px solid Ink<br>
+        <strong>Padding:</strong> 18px top / 16px bottom<br>
+        <strong>Vertical margin:</strong> 18px above and below
+      </div>
+      <div>
+        <span class="role-tag">Accent tab</span>
+        <strong>Size:</strong> 48px wide × 4px tall<br>
+        <strong>Position:</strong> Top-left, sits 3px above top rule<br>
+        <strong>Curly quotes:</strong> Accent colour, around the text
+      </div>
+    </div>
+  </div>
+
+  <!-- Drop cap -->
+  <div class="comp-block">
+    <div class="demo-drop">In 2022, Kate Bush's <em>Running Up That Hill</em> hit number one in the UK. The song had been released 37 years earlier. Streams jumped 8,700% in weeks. Bush became the oldest female artist ever to top the UK Singles Chart — at 63, with a track most of her new listeners hadn't been born to hear the first time.</div>
+    <div class="specs-row">
+      <div>
+        <span class="role-tag">Drop cap</span>
+        <strong>Font:</strong> Fraunces 600, opsz 144<br>
+        <strong>Size:</strong> ~64px (5–6 body lines tall)<br>
+        <strong>Colour:</strong> Accent
+      </div>
+      <div>
+        <span class="role-tag">Behaviour</span>
+        <strong>Float:</strong> left<br>
+        <strong>Padding:</strong> 4px top, 8px right, 0 bottom, 0 left<br>
+        <strong>Use:</strong> First letter of opening paragraph only
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom line -->
+  <div class="comp-block">
+    <div class="demo-bottom-line">
+      <div class="label">The Bottom Line</div>
+      <p>One short paragraph that resolves the argument. Lives at the foot of page 2, above the sign-off.</p>
+    </div>
+    <div class="specs-row">
+      <div>
+        <span class="role-tag">Bottom Line panel</span>
+        <strong>Fill:</strong> Ink (#1A1716)<br>
+        <strong>Text:</strong> Paper (#F2EBDC)<br>
+        <strong>Padding:</strong> 14px / 18px (vertical / horizontal)
+      </div>
+      <div>
+        <span class="role-tag">Top accent tab</span>
+        <strong>Size:</strong> 56px wide × 4px tall, Accent<br>
+        <strong>Label colour:</strong> Sulfur (the only place sulfur is used as text)<br>
+        <strong>Body type:</strong> EB Garamond 12pt / 145%
+      </div>
+    </div>
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">v.</span>
+    <span>Section 04 · Components</span>
+  </footer>
+
+</article>
+
+
+<!-- ============== PAGE 6 — RULES & EDGE CASES ============== -->
+<article class="page">
+
+  <div class="doc-header">
+    <div class="left">Matrix Matchstick — Design Specification</div>
+    <div class="right">Section 05 · Rules &amp; handover</div>
+  </div>
+
+  <div class="page-title">
+    <div class="num">v.</div>
+    <h2>Rules &amp; edge cases.</h2>
+    <p class="intro">Recurring decisions that come up across issues. Apply consistently; deviations should be deliberate, not accidental.</p>
+  </div>
+
+  <div class="sec">
+    <div class="label">Editorial defaults</div>
+    <h3>Tone of voice for the page</h3>
+  </div>
+
+  <div class="two-col">
+    <div class="rule-card">
+      <div class="head"><span class="name">Casing</span><span class="tag">Rule</span></div>
+      <p>Sentence case throughout, including headlines and section heads. ALL CAPS appears only in Archivo Narrow utility text (eyebrows, labels, bylines, footer, captions). Never set body or display in caps.</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Italic emphasis</span><span class="tag">Rule</span></div>
+      <p>Italic is the workhorse for emphasis — in body, deck, headlines (where italic words also take the accent colour). Avoid bold inside body copy. Where an entity name needs setting apart (a song title, a brand), use italic, not quotes.</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Numerals</span><span class="tag">Rule</span></div>
+      <p>EB Garamond and Fraunces both offer old-style figures. Use them — they sit better in justified body. Tabular figures only in data tables (rare in this format).</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Hyphenation</span><span class="tag">Rule</span></div>
+      <p>Body is justified with auto-hyphenation enabled. Avoid more than two consecutive hyphenated line ends. Manual hyphenation overrides are fine — protect proper nouns from breaking.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="label">Imagery &amp; figures</div>
+    <h3>Working with photography</h3>
+  </div>
+
+  <div class="two-col">
+    <div class="rule-card">
+      <div class="head"><span class="name">Treatment</span><span class="tag">Image</span></div>
+      <p>Imagery should feel reportorial, not promotional — duotone-treated black-and-white or warm sepia preferred over full colour. Slot inside a single column or span both. Always pair with a caption.</p>
+    </div>
+    <div class="rule-card">
+      <div class="head"><span class="name">Caption</span><span class="tag">Image</span></div>
+      <p>Archivo Narrow 9.5px UPPERCASE, ink-muted, looser tracking (+0.06em vs +0.18em elsewhere). Sits flush below the image with 0 top margin. Start with "Figure 01 ·" or similar, then a brief description.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="label">Figma file structure</div>
+    <h3>How to organise the file</h3>
+  </div>
+
+  <div class="rule-card">
+    <div class="head"><span class="name">Recommended pages</span><span class="tag">File</span></div>
+    <p>
+      <strong>① Cover / styles</strong> — published colour styles, text styles, effect styles<br>
+      <strong>② Components</strong> — every reusable module from Section 04, as components with variants<br>
+      <strong>③ Templates</strong> — two A4 frames (page 1, page 2) with components placed and dummy copy<br>
+      <strong>④ Issue 24</strong> — duplicated template with this issue's live content<br>
+      Each subsequent issue duplicates page ④ and renames it. The template stays untouched.
+    </p>
+  </div>
+
+  <div class="rule-card">
+    <div class="head"><span class="name">Component variants worth building</span><span class="tag">File</span></div>
+    <p>
+      <strong>Masthead</strong> — Front / Continued variants<br>
+      <strong>Section head</strong> — Standard / What-this-means (numbered)<br>
+      <strong>Pull quote</strong> — Short / Long (auto-grows with text)<br>
+      <strong>Image block</strong> — Single column / Spanning columns<br>
+      Build the Bottom Line panel and Sign-off as single-instance components; they appear once per issue.
+    </p>
+  </div>
+
+  <div class="cover-note" style="margin-top: 20px;">
+    <div class="label">Questions while building</div>
+    <p>
+      Open both the reference HTML and this specification side by side. Where they conflict, the HTML wins — it's the rendered source of truth. Once the Figma file is built, this document becomes the brief for issues 25 onward, where the designer's job is content placement, not system decisions.
+    </p>
+  </div>
+
+  <footer class="page-foot">
+    <span>Matrix · Design Specification</span>
+    <span class="num">vi.</span>
+    <span>Section 05 · Rules &amp; handover</span>
+  </footer>
+
+</article>
+
+</body>
+</html>
